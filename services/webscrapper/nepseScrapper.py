@@ -1,3 +1,4 @@
+from enum import Enum
 import time
 from datetime import timedelta, datetime
 import pandas as pd
@@ -29,8 +30,12 @@ class NepseScraper:
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
         return driver
 
-    def start(self):
-        url = f"https://www.nepalstock.com/today-price"  
+    class Page(Enum):
+        TODAY_PRICE = "today-price"
+        STOCK_TRADING = "stock-trading"
+
+    def browse(self, page = Page.TODAY_PRICE):
+        url = f"https://www.nepalstock.com/" + page.value
         driver = self.driver
         driver.get(url)
 
@@ -75,5 +80,45 @@ class NepseScraper:
         df = pd.DataFrame(data, columns=header_texts)
         return df
 
-    def fetch_data_symbol(self, from_DDMMYYY, to_DDMMYYYY):
-        pass
+    def fetch_data_symbol(self, symbol, from_MMDDYYY = "04/06/2024", to_MMDDYYYY = "04/16/2025"):
+        driver = self.driver
+        wait = WebDriverWait(driver, 10)
+
+        from_date = wait.until(EC.visibility_of_element_located((By.XPATH, "//label[text()='From']/following-sibling::input")))
+        to_date = driver.find_element(By.XPATH, "//label[text()='To']/following-sibling::input")
+        from_date.clear()
+        to_date.clear()
+        from_date.send_keys(from_MMDDYYY)
+        to_date.send_keys(to_MMDDYYYY)
+
+        symbol_element = driver.find_element(By.XPATH, "//input[@placeholder='Stock Symbol or Company Name']");
+        symbol_element.clear()
+        symbol_element.click()
+
+        for key in symbol:
+            symbol_element.send_keys(key)
+        symbol_element.send_keys(Keys.ENTER)
+
+        dropdown_entries = driver.find_element(By.TAG_NAME, "select")
+        select = Select(dropdown_entries)
+        select.select_by_value("500")
+
+        filter_button = driver.find_element(By.XPATH, "//button[contains(@class, 'box__filter--search') and normalize-space(text())='Filter']")
+        filter_button.click()
+
+        table = wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "table-responsive")))
+        thead = table.find_element(By.CLASS_NAME, "thead-light")
+        header_cells = thead.find_elements(By.TAG_NAME, "th")
+
+        data = []
+        header_texts = [cell.text.strip() for cell in header_cells]
+        rows = table.find_elements(By.TAG_NAME, "tr")
+        for row in rows :
+            cols = row.find_elements(By.TAG_NAME, "td")
+            if cols:
+                row = [col.text for col in cols]
+                print(row)
+                data.append(row)
+        df = pd.DataFrame(data, columns=header_texts)
+        return df
+
