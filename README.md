@@ -19,6 +19,9 @@
 - 🎯 **Smarter Predictions** – Improves over time with fresh + historic data.
 
 ---
+## 🖼️ Screenshots
+
+<img src="https://github.com/user-attachments/assets/935b6be2-214b-4760-a572-3717509cef63" width="200">
 
 ## ⚙️ How It Works
 
