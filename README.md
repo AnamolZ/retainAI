@@ -21,7 +21,7 @@
 ---
 ## 🖼️ Screenshots
 
-<img src="https://github.com/user-attachments/assets/935b6be2-214b-4760-a572-3717509cef63" width="200">
+<img src="https://github.com/user-attachments/assets/935b6be2-214b-4760-a572-3717509cef63" width="350">
 
 ## ⚙️ How It Works
 
