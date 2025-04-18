@@ -28,10 +28,3 @@ class ModelPredictor:
         predicted_value = scaler.inverse_transform(prediction)[0, 0]
 
         return predicted_value
-
-if __name__ == "__main__":
-    model_predictor = ModelPredictor(
-        "/home/xznom/testing/dataPrice/dataPrice.csv",
-        "/home/xznom/testing/model/LSTMmodel.h5"
-    )
-    print(model_predictor._generate_prediction())
