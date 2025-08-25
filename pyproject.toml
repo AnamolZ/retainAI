@@ -1,0 +1,28 @@
+[project]
+name = "retainai"
+version = "0.1.0"
+description = "Retain the Knowledge Learned: An API for Model Deployment."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "apscheduler==3.11.0",
+    "fastapi==0.116.1",
+    "nest-asyncio>=1.6.0",
+    "pandas==2.3.1",
+    "psutil>=7.0.0",
+    "psycopg2>=2.9.10",
+    "python-multipart==0.0.20",
+    "python-telegram-bot>=22.3",
+    "redis>=6.4.0",
+    "requests==2.32.4",
+    "scikit-learn==1.6.1",
+    "selenium==4.34.2",
+    "slowapi>=0.1.9",
+    "sqlalchemy>=2.0.43",
+    "tensorflow==2.19.0",
+    "tensorflow-io-gcs-filesystem==0.31.0",
+    "twilio>=9.7.0",
+    "uvicorn==0.35.0",
+    "webdriver-manager==4.0.2",
+    "yfinance==0.2.65",
+]

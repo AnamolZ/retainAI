@@ -3,7 +3,6 @@ import queue
 import time
 from datetime import datetime
 import os
-import sys
 
 class Logger:
     def __init__(self):

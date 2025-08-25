@@ -1,9 +1,20 @@
-# Ignore Python bytecode
+# Python-generated files
 __pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
 
 # Ignore virtual environments
 venv/
-.env/
+.env
+env/
+.venv/
+ENV/
+
+# Ignore environment variables files
+*.env
 
 # Ignore Python bytecode files
 *.pyc
