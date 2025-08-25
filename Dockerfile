@@ -31,8 +31,9 @@ WORKDIR /app
 
 COPY requirements.txt .
 
-RUN echo '[project]\nname = "app"\nversion = "0.1.0"\ndependencies = []' > pyproject.toml
-RUN uv add -r requirements.txt
+# RUN echo '[project]\nname = "retainai"\nversion = "0.1.0"\ndependencies = []' > pyproject.toml
+COPY pyproject.toml /app/pyproject.toml
+# RUN uv add -r requirements.txt
 
 COPY . .
 
