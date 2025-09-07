@@ -27,13 +27,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && npm install -g concurrently
+
+WORKDIR /app/src/ui
+COPY src/ui/package*.json ./ 
+RUN npm install
+
 WORKDIR /app
-
 COPY requirements.txt .
-
-# RUN echo '[project]\nname = "retainai"\nversion = "0.1.0"\ndependencies = []' > pyproject.toml
-COPY pyproject.toml /app/pyproject.toml
-# RUN uv add -r requirements.txt
+RUN echo '[project]\nname = "app"\nversion = "0.1.0"\ndependencies = []' > pyproject.toml
+RUN uv add -r requirements.txt
 
 COPY . .
 
@@ -41,6 +46,6 @@ ENV TF_ENABLE_ONEDNN_OPTS=0
 ENV TF_CPP_MIN_LOG_LEVEL=3
 ENV PYTHONDONTWRITEBYTECODE=1
 
-EXPOSE 8000
+EXPOSE 8000 5173
 
-CMD ["uv", "run", "main.py", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["concurrently", "uv run main.py --host 0.0.0.0 --port 8000", "cd src/ui && npm run dev"]
