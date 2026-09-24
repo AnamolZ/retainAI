@@ -1,51 +1,42 @@
-FROM python:3.13.5
+FROM python:3.11-slim
 
-RUN apt-get update && apt-get install -y \
-    curl ca-certificates chromium chromium-driver \
-    libnss3 libgconf-2-4 libxi6 libxcursor1 libxrandr2 \
-    libxcomposite1 libasound2 libpangocairo-1.0-0 \
-    libatk1.0-0 libatk-bridge2.0-0 libgtk-3-0 \
-    && rm -rf /var/lib/apt/lists/*
+# Prevent interactive prompts and Python bytecode generation
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    TF_ENABLE_ONEDNN_OPTS=0 \
+    TF_CPP_MIN_LOG_LEVEL=3 \
+    PATH="/root/.local/bin:${PATH}"
 
-RUN apt-get update && apt-get install -y curl ca-certificates && \
-    curl -LsSf https://astral.sh/uv/install.sh | sh
-
-ENV DEBIAN_FRONTEND=noninteractive
-ENV PATH="/root/.local/bin:${PATH}"
-
+# Install system dependencies: Chromium, Chromedriver, Node.js and curl
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    wget \
+    curl \
+    ca-certificates \
     gnupg \
-    && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
-    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends \
-    google-chrome-stable \
-    libnss3 \
-    libgconf-2-4 \
-    libfontconfig1 \
-    && apt-get clean \
+    chromium \
+    chromium-driver \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/*
 
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs \
-    && npm install -g concurrently
+# Install uv for fast Python package management
+RUN pip install --no-cache-dir uv
 
+# Build frontend dependencies
 WORKDIR /app/src/ui
-COPY src/ui/package*.json ./ 
+COPY src/ui/package*.json ./
 RUN npm install
 
+# Build backend dependencies
 WORKDIR /app
-COPY requirements.txt .
-RUN echo '[project]\nname = "app"\nversion = "0.1.0"\ndependencies = []' > pyproject.toml
-RUN uv add -r requirements.txt
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev
 
+# Copy application source code
 COPY . .
 
-ENV TF_ENABLE_ONEDNN_OPTS=0
-ENV TF_CPP_MIN_LOG_LEVEL=3
-ENV PYTHONDONTWRITEBYTECODE=1
-
+# Expose backend (8000) and frontend (5173)
 EXPOSE 8000 5173
 
-CMD ["concurrently", "uv run main.py --host 0.0.0.0 --port 8000", "cd src/ui && npm run dev"]
+# Run both backend and frontend concurrently
+CMD ["npx", "--yes", "concurrently", "/app/.venv/bin/python main.py", "cd src/ui && npm run dev -- --host 0.0.0.0 --port 5173"]

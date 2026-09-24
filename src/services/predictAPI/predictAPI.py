@@ -37,8 +37,32 @@ origins = [
     "http://localhost:30573",
 ]
 
+load_dotenv()
+
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+account_sid = os.getenv("TWILIO_ACCOUNT_SID")
+auth_token = os.getenv("TWILIO_AUTH_TOKEN")
+
+client = Client(account_sid, auth_token) if (account_sid and auth_token) else None
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+
+training_data_path = PROJECT_ROOT / "assets" / "dataPrice"
+pre_trained_model_path = PROJECT_ROOT / "assets" / "models"
+
+scheduler = BackgroundScheduler()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("Application startup: Starting scheduler...")
+    scheduler.start()
+    print("Scheduler started.")
+    yield
+    print("Application shutdown: Stopping scheduler...")
+    scheduler.shutdown()
+    print("Scheduler stopped.")
+
 limiter = Limiter(key_func=get_remote_address)
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -47,20 +71,6 @@ app.add_middleware(
     allow_methods=["*"], # Allows all methods
     allow_headers=["*"], # Allows all headers
 )
-
-load_dotenv()
-
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-account_sid = os.getenv("TWILIO_ACCOUNT_SID")
-auth_token = os.getenv("TWILIO_AUTH_TOKEN")
-
-client = Client(account_sid, auth_token)
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
-
-training_data_path = PROJECT_ROOT / "assets" / "dataPrice"
-pre_trained_model_path = PROJECT_ROOT / "assets" / "models"
-
-scheduler = BackgroundScheduler()
 train_lock = asyncio.Lock()
 cache_predictions_lock = asyncio.Lock()
 cache_model_lock = asyncio.Lock()
@@ -233,25 +243,6 @@ scheduler.add_job(
     replace_existing=True
 )
 
-@app.on_event("startup")
-async def startup_event():
-    """
-    Starts the scheduler on application startup.
-    The scheduler will immediately run any pending jobs (like the scraping job)
-    and then continue based on their defined triggers.
-    """
-    print("Application startup: Starting scheduler...")
-    scheduler.start()
-    print("Scheduler started.")
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """
-    Shuts down the scheduler gracefully on application shutdown.
-    """
-    print("Application shutdown: Stopping scheduler...")
-    scheduler.shutdown()
-    print("Scheduler stopped.")
 
 async def predict(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) != 2:
@@ -343,11 +334,14 @@ async def whatsapp_repo(background_tasks: BackgroundTasks,
         except Exception as e:
             result = f"Error processing {stock_symbol}: {str(e)}"
 
-        client.messages.create(
-            from_=to_number,
-            to=from_number,
-            body=result
-        )
+        if client:
+            client.messages.create(
+                from_=to_number,
+                to=from_number,
+                body=result
+            )
+        else:
+            print(f"Twilio message for {to_number}: {result}")
 
     background_tasks.add_task(task)
 

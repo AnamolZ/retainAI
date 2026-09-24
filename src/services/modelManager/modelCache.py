@@ -35,7 +35,7 @@ class RedisModelHandler:
         try:
             with open(path, "wb") as f:
                 f.write(data)
-            return load_model(path)
+            return load_model(path, compile=False)
         finally:
             os.remove(path)
 

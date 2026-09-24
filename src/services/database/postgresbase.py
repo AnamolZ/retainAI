@@ -2,6 +2,9 @@ import pandas as pd
 from pathlib import Path
 from sqlalchemy import create_engine
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class PostgresDB:
     def __init__(self):

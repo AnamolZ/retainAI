@@ -27,3 +27,8 @@ ENV/
 
 # Ignore logs
 *.log
+
+# Node.js
+node_modules/
+dist/
+.DS_Store

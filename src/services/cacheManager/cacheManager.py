@@ -2,6 +2,9 @@ import redis
 import json
 from typing import Optional
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 redis_url = os.environ.get("REDIS_URL", "redis://localhost:6379")
 

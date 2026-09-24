@@ -12,15 +12,16 @@ class ModelPredictor:
     """
     Handles price prediction using a pre-loaded Keras model.
     """
-    def __init__(self, data_path_or_df, model):
+    def __init__(self, data_path_or_df=None, model=None, data_path=None):
         """
         Initializes the predictor with a data path/DataFrame and a pre-loaded model object.
 
         Args:
             data_path_or_df (pathlib.Path, str, or pd.DataFrame): The path to the CSV data file or a pre-loaded DataFrame.
             model (keras.Model): The pre-loaded Keras model object passed from the main app.
+            data_path (pathlib.Path or str, optional): Alias for data_path_or_df.
         """
-        self.data_source = data_path_or_df
+        self.data_source = data_path_or_df if data_path_or_df is not None else data_path
         self.model = model
         
     def _generate_prediction(self):
